@@ -4,16 +4,17 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/gocolly/colly/v2"
 
-	"bullnose/internal/config"
-	"bullnose/internal/scraper/content"
-	"bullnose/internal/scraper/sitemap"
-	"bullnose/internal/scraper/stats"
-	"bullnose/internal/scraper/storage"
-	"bullnose/internal/utils"
+	"github.com/ncecere/bullnose/internal/config"
+	"github.com/ncecere/bullnose/internal/scraper/content"
+	"github.com/ncecere/bullnose/internal/scraper/sitemap"
+	"github.com/ncecere/bullnose/internal/scraper/stats"
+	"github.com/ncecere/bullnose/internal/scraper/storage"
+	"github.com/ncecere/bullnose/internal/utils"
 )
 
 // Scraper coordinates the web scraping process
@@ -32,7 +33,7 @@ func New(cfg *config.Config) (*Scraper, error) {
 		colly.MaxDepth(cfg.Depth),
 		colly.Async(cfg.Parallel > 1),
 		colly.URLFilters(
-			regexp.MustCompile(`^https?://[^/]+/.*`), // Only follow URLs with paths
+			regexp.MustCompile(`^https?://[^/]+(?:/.*)?$`), // Allow base domain and paths
 		),
 	)
 
@@ -171,16 +172,17 @@ func (s *Scraper) setupCallbacks() {
 		// Extract content
 		content := s.extractor.ExtractContent(e.Request.URL.Host, e.DOM)
 
-		// Generate markdown content
-		markdown := fmt.Sprintf("# %s\n\n## Metadata\n- URL: %s\n- Scraped: %s\n\n## Content\n%s",
-			title,
-			e.Request.URL.String(),
-			time.Now().UTC().Format(time.RFC3339),
-			content,
-		)
+		// Generate markdown content with consistent formatting
+		var markdown strings.Builder
+		markdown.WriteString(fmt.Sprintf("# %s\n", title))
+		markdown.WriteString("\n## Metadata\n")
+		markdown.WriteString(fmt.Sprintf("- URL: %s\n", e.Request.URL.String()))
+		markdown.WriteString(fmt.Sprintf("- Scraped: %s\n", time.Now().UTC().Format(time.RFC3339)))
+		markdown.WriteString("\n## Content\n")
+		markdown.WriteString(content)
 
 		// Save content
-		outputPath, err := s.storage.SaveContent(e.Request.URL.Host, title, markdown)
+		outputPath, err := s.storage.SaveContent(e.Request.URL.Host, title, markdown.String())
 		if err != nil {
 			log.Printf("Error saving content for %s: %v", e.Request.URL, err)
 			return

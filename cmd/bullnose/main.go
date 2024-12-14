@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"bullnose/internal/config"
-	"bullnose/internal/scraper"
+	"github.com/ncecere/bullnose/internal/config"
+	"github.com/ncecere/bullnose/internal/scraper"
 )
 
 var (

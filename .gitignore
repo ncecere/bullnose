@@ -29,3 +29,4 @@ go.work
 # Project specific
 scraped-content/
 test-config.yaml
+tests/

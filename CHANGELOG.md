@@ -8,6 +8,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- None
+
+### Changed
+- None
+
+### Deprecated
+- None
+
+### Removed
+- None
+
+### Fixed
+- None
+
+### Security
+- None
+
+## [1.0.0] - 2023-12-13
+
+### Added
 - Initial release of Bullnose web scraper
 - Command-line interface with cobra
 - Configuration management with viper
@@ -26,23 +46,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - GitHub Actions CI/CD pipeline
 - Documentation (README, LICENSE, CONTRIBUTING)
 
-### Changed
-- None
-
-### Deprecated
-- None
-
-### Removed
-- None
-
 ### Fixed
-- None
+- Enhanced code block handling in markdown generation
+  - Improved language detection from multiple class patterns
+  - Preserved original code indentation
+  - Better handling of nested code blocks
+  - Proper spacing around code blocks
+  - More reliable markdown formatting
 
-### Security
-- None
+## [0.1.0] - 2024-12-01
+- Initial beta release
 
-## [0.1.0] - YYYY-MM-DD
-- Initial release
-
-[Unreleased]: https://github.com/yourusername/bullnose/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/yourusername/bullnose/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/yourusername/bullnose/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/yourusername/bullnose/releases/tag/v0.1.0
