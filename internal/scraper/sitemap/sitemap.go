@@ -5,16 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"time"
 )
-
-// Sitemap represents a standard XML sitemap
-type Sitemap struct {
-	XMLName xml.Name `xml:"urlset"`
-	URLs    []struct {
-		Loc string `xml:"loc"`
-	} `xml:"url"`
-}
 
 // SitemapIndex represents a sitemap index file
 type SitemapIndex struct {
@@ -24,7 +15,15 @@ type SitemapIndex struct {
 	} `xml:"sitemap"`
 }
 
-// Parser handles sitemap parsing operations
+// Sitemap represents a sitemap file
+type Sitemap struct {
+	XMLName xml.Name `xml:"urlset"`
+	URLs    []struct {
+		Loc string `xml:"loc"`
+	} `xml:"url"`
+}
+
+// Parser handles sitemap parsing
 type Parser struct {
 	client *http.Client
 }
@@ -32,53 +31,38 @@ type Parser struct {
 // NewParser creates a new sitemap parser
 func NewParser() *Parser {
 	return &Parser{
-		client: &http.Client{
-			Timeout: 30 * time.Second,
-		},
+		client: &http.Client{},
 	}
 }
 
-// Parse attempts to parse a sitemap URL and returns all discovered URLs
-func (p *Parser) Parse(sitemapURL string) ([]string, error) {
-	resp, err := p.client.Get(sitemapURL)
+// Parse parses a sitemap URL and returns a list of page URLs
+func (p *Parser) Parse(url string) ([]string, error) {
+	resp, err := p.client.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch sitemap: %w", err)
+		return nil, fmt.Errorf("error fetching sitemap: %w", err)
 	}
-	defer resp.Body.Close()
+
+	// Ensure the response body is closed after we're done
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Printf("Error closing response body: %v\n", err)
+		}
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read sitemap body: %w", err)
+		return nil, fmt.Errorf("error reading sitemap body: %w", err)
 	}
 
-	urls, err := p.parseContent(body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse sitemap content: %w", err)
-	}
-
-	return urls, nil
-}
-
-// parseContent attempts to parse the XML content as either a sitemap or sitemap index
-func (p *Parser) parseContent(content []byte) ([]string, error) {
-	var urls []string
-
-	// Try parsing as sitemap
-	var sitemap Sitemap
-	if err := xml.Unmarshal(content, &sitemap); err == nil {
-		for _, url := range sitemap.URLs {
-			urls = append(urls, url.Loc)
-		}
-		return urls, nil
-	}
-
-	// Try parsing as sitemap index
-	var sitemapIndex SitemapIndex
-	if err := xml.Unmarshal(content, &sitemapIndex); err == nil {
-		for _, sitemap := range sitemapIndex.Sitemaps {
-			subUrls, err := p.Parse(sitemap.Loc)
+	// Try parsing as sitemap index first
+	var index SitemapIndex
+	if err := xml.Unmarshal(body, &index); err == nil && len(index.Sitemaps) > 0 {
+		var urls []string
+		for _, s := range index.Sitemaps {
+			subUrls, err := p.Parse(s.Loc)
 			if err != nil {
 				// Log error but continue with other sitemaps
+				fmt.Printf("Error parsing sub-sitemap %s: %v\n", s.Loc, err)
 				continue
 			}
 			urls = append(urls, subUrls...)
@@ -86,5 +70,16 @@ func (p *Parser) parseContent(content []byte) ([]string, error) {
 		return urls, nil
 	}
 
-	return nil, fmt.Errorf("content is neither a valid sitemap nor sitemap index")
+	// Try parsing as regular sitemap
+	var sitemap Sitemap
+	if err := xml.Unmarshal(body, &sitemap); err != nil {
+		return nil, fmt.Errorf("error parsing sitemap XML: %w", err)
+	}
+
+	var urls []string
+	for _, u := range sitemap.URLs {
+		urls = append(urls, u.Loc)
+	}
+
+	return urls, nil
 }

@@ -2,62 +2,42 @@ package stats
 
 import (
 	"fmt"
-	"sync"
+	"sync/atomic"
 	"time"
 )
 
 // Stats tracks scraping statistics
 type Stats struct {
-	URLsScanned int
-	URLsScraped int
-	URLsSkipped int
-	StartTime   time.Time
-	mutex       sync.Mutex
+	startTime time.Time
+	scanned   atomic.Int64
+	scraped   atomic.Int64
 }
 
-// New creates a new Stats tracker
+// New creates a new Stats instance
 func New() *Stats {
 	return &Stats{
-		StartTime: time.Now(),
+		startTime: time.Now(),
 	}
 }
 
-// IncrementScanned increments the number of URLs scanned
+// IncrementScanned increments the scanned counter
 func (s *Stats) IncrementScanned() {
-	s.mutex.Lock()
-	s.URLsScanned++
-	s.mutex.Unlock()
+	s.scanned.Add(1)
 }
 
-// IncrementScraped increments the number of URLs scraped
+// IncrementScraped increments the scraped counter
 func (s *Stats) IncrementScraped() {
-	s.mutex.Lock()
-	s.URLsScraped++
-	s.mutex.Unlock()
+	s.scraped.Add(1)
 }
 
-// IncrementSkipped increments the number of URLs skipped
-func (s *Stats) IncrementSkipped() {
-	s.mutex.Lock()
-	s.URLsSkipped++
-	s.mutex.Unlock()
-}
-
-// GetSummary returns a formatted summary of the statistics
+// GetSummary returns a summary of the scraping statistics
 func (s *Stats) GetSummary() string {
-	duration := time.Since(s.StartTime)
-	return fmt.Sprintf(`
-Scraping Statistics:
-URLs Scanned: %d
-URLs Scraped: %d
-URLs Skipped: %d
-Total Time: %s
-`, s.URLsScanned, s.URLsScraped, s.URLsSkipped, duration.Round(time.Second))
-}
-
-// GetStats returns the current statistics
-func (s *Stats) GetStats() (scanned, scraped, skipped int, duration time.Duration) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
-	return s.URLsScanned, s.URLsScraped, s.URLsSkipped, time.Since(s.StartTime)
+	duration := time.Since(s.startTime)
+	return fmt.Sprintf("\nScraping Summary:\n"+
+		"Duration: %v\n"+
+		"URLs Scanned: %d\n"+
+		"Pages Scraped: %d\n",
+		duration.Round(time.Second),
+		s.scanned.Load(),
+		s.scraped.Load())
 }

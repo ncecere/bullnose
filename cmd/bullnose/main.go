@@ -11,10 +11,11 @@ import (
 	"github.com/ncecere/bullnose/internal/scraper"
 )
 
-var (
-	Version = "dev"
-	cfgFile string
-)
+// Version represents the current version of bullnose.
+// It is set during build time using -ldflags.
+var Version = "dev"
+
+var cfgFile string
 
 func main() {
 	if err := rootCmd.Execute(); err != nil {
@@ -81,40 +82,71 @@ func loadConfig(cmd *cobra.Command, args []string) (*config.Config, error) {
 	}
 
 	// Override with command line flags
+	output, err := cmd.Flags().GetString("output")
+	if err != nil {
+		return nil, fmt.Errorf("error getting output flag: %w", err)
+	}
 	if cmd.Flags().Changed("output") {
-		output, _ := cmd.Flags().GetString("output")
 		cfg.Output = output
 	}
+
+	depth, err := cmd.Flags().GetInt("depth")
+	if err != nil {
+		return nil, fmt.Errorf("error getting depth flag: %w", err)
+	}
 	if cmd.Flags().Changed("depth") {
-		depth, _ := cmd.Flags().GetInt("depth")
 		cfg.Depth = depth
 	}
+
+	parallel, err := cmd.Flags().GetInt("parallel")
+	if err != nil {
+		return nil, fmt.Errorf("error getting parallel flag: %w", err)
+	}
 	if cmd.Flags().Changed("parallel") {
-		parallel, _ := cmd.Flags().GetInt("parallel")
 		cfg.Parallel = parallel
 	}
+
+	restrictDomain, err := cmd.Flags().GetBool("restrict-domain")
+	if err != nil {
+		return nil, fmt.Errorf("error getting restrict-domain flag: %w", err)
+	}
 	if cmd.Flags().Changed("restrict-domain") {
-		restrictDomain, _ := cmd.Flags().GetBool("restrict-domain")
 		cfg.RestrictDomain = restrictDomain
 	}
+
 	if cmd.Flags().Changed("rescrape-after") {
-		rescrapeAfter, _ := cmd.Flags().GetString("rescrape-after")
+		rescrapeAfter, err := cmd.Flags().GetString("rescrape-after")
+		if err != nil {
+			return nil, fmt.Errorf("error getting rescrape-after flag: %w", err)
+		}
 		duration, err := time.ParseDuration(rescrapeAfter)
 		if err != nil {
 			return nil, fmt.Errorf("invalid rescrape-after duration: %w", err)
 		}
 		cfg.RescrapeAfter = duration
 	}
+
+	force, err := cmd.Flags().GetBool("force")
+	if err != nil {
+		return nil, fmt.Errorf("error getting force flag: %w", err)
+	}
 	if cmd.Flags().Changed("force") {
-		force, _ := cmd.Flags().GetBool("force")
 		cfg.Force = force
 	}
+
+	debug, err := cmd.Flags().GetBool("debug")
+	if err != nil {
+		return nil, fmt.Errorf("error getting debug flag: %w", err)
+	}
 	if cmd.Flags().Changed("debug") {
-		debug, _ := cmd.Flags().GetBool("debug")
 		cfg.Debug = debug
 	}
+
+	ignore, err := cmd.Flags().GetStringSlice("ignore")
+	if err != nil {
+		return nil, fmt.Errorf("error getting ignore flag: %w", err)
+	}
 	if cmd.Flags().Changed("ignore") {
-		ignore, _ := cmd.Flags().GetStringSlice("ignore")
 		cfg.Ignore = ignore
 	}
 

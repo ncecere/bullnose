@@ -1,22 +1,21 @@
 package storage
 
 import (
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 	"time"
 )
 
-// Storage handles file operations and URL tracking
+// Storage handles content storage operations
 type Storage struct {
 	outputDir     string
-	visitedURLs   sync.Map
 	rescrapeAfter time.Duration
 	force         bool
+	visited       map[string]bool
 }
 
 // New creates a new Storage instance
@@ -25,60 +24,60 @@ func New(outputDir string, rescrapeAfter time.Duration, force bool) *Storage {
 		outputDir:     outputDir,
 		rescrapeAfter: rescrapeAfter,
 		force:         force,
+		visited:       make(map[string]bool),
 	}
-}
-
-// MarkVisited marks a URL as visited
-func (s *Storage) MarkVisited(url string) {
-	s.visitedURLs.Store(url, true)
 }
 
 // IsVisited checks if a URL has been visited
 func (s *Storage) IsVisited(url string) bool {
-	_, visited := s.visitedURLs.Load(url)
-	return visited
-}
-
-// ShouldRescrape determines if a file should be rescraped
-func (s *Storage) ShouldRescrape(filepath string) bool {
-	// Always scrape if force is enabled
 	if s.force {
+		return false
+	}
+
+	if visited := s.visited[url]; visited {
 		return true
 	}
 
-	// Check if file exists
-	info, err := os.Stat(filepath)
-	if os.IsNotExist(err) {
-		return true
-	}
+	outputPath := s.getOutputPath(url)
+	info, err := os.Stat(outputPath)
 	if err != nil {
-		return true
+		return false
 	}
 
 	// Check if enough time has passed since last scrape
-	return time.Since(info.ModTime()) >= s.rescrapeAfter
+	if s.rescrapeAfter > 0 && time.Since(info.ModTime()) < s.rescrapeAfter {
+		return true
+	}
+
+	return false
+}
+
+// MarkVisited marks a URL as visited
+func (s *Storage) MarkVisited(url string) {
+	s.visited[url] = true
 }
 
 // SaveContent saves content to a file
 func (s *Storage) SaveContent(domain, title, content string) (string, error) {
-	// Create safe filename from title
+	// Create domain directory
+	outputDir := filepath.Join(s.outputDir, domain)
+	if err := os.MkdirAll(outputDir, 0700); err != nil {
+		return "", fmt.Errorf("error creating output directory: %w", err)
+	}
+
+	// Generate filename from title
 	filename := s.sanitizeFilename(title)
 	if filename == "" {
-		filename = s.hashURL(title) // Use title as URL if no valid filename can be created
+		filename = s.hashString(title)
 	}
+	filename += ".md"
 
-	// Determine output directory based on domain
-	outputDir := filepath.Join(s.outputDir, domain)
-	if err := os.MkdirAll(outputDir, 0755); err != nil {
-		return "", fmt.Errorf("failed to create output directory: %w", err)
-	}
-
-	// Create markdown file
-	outputPath := filepath.Join(outputDir, filename+".md")
+	// Create full output path
+	outputPath := filepath.Join(outputDir, filename)
 
 	// Write content to file
-	if err := os.WriteFile(outputPath, []byte(content), 0644); err != nil {
-		return "", fmt.Errorf("failed to write file: %w", err)
+	if err := os.WriteFile(outputPath, []byte(content), 0600); err != nil {
+		return "", fmt.Errorf("error writing content: %w", err)
 	}
 
 	return outputPath, nil
@@ -86,30 +85,43 @@ func (s *Storage) SaveContent(domain, title, content string) (string, error) {
 
 // sanitizeFilename creates a safe filename from a string
 func (s *Storage) sanitizeFilename(name string) string {
-	// Remove invalid characters
+	// Replace invalid characters with hyphens
 	name = strings.Map(func(r rune) rune {
-		if r > 127 || strings.ContainsRune(`<>:"/\|?*`, r) {
-			return '-'
+		if (r >= 'a' && r <= 'z') ||
+			(r >= 'A' && r <= 'Z') ||
+			(r >= '0' && r <= '9') ||
+			r == '-' || r == '_' {
+			return r
 		}
-		return r
+		return '-'
 	}, name)
 
-	// Trim spaces and dashes
-	name = strings.Trim(name, " -")
+	// Remove consecutive hyphens
+	name = strings.Join(strings.FieldsFunc(name, func(r rune) bool {
+		return r == '-'
+	}), "-")
 
-	// Replace multiple dashes with single dash
-	name = strings.Join(strings.Fields(name), "-")
+	// Trim hyphens from ends
+	name = strings.Trim(name, "-")
+
+	// Limit length
+	if len(name) > 100 {
+		name = name[:100]
+	}
 
 	return strings.ToLower(name)
 }
 
-// hashURL creates a hash from a URL string
-func (s *Storage) hashURL(url string) string {
-	hash := md5.Sum([]byte(url))
-	return hex.EncodeToString(hash[:])
+// hashString creates a SHA-256 hash of a string
+func (s *Storage) hashString(str string) string {
+	hash := sha256.Sum256([]byte(str))
+	return hex.EncodeToString(hash[:])[:20] // Use first 20 chars of hash
 }
 
-// GetOutputPath returns the full output path for a domain and filename
-func (s *Storage) GetOutputPath(domain, filename string) string {
-	return filepath.Join(s.outputDir, domain, filename+".md")
+// getOutputPath gets the output path for a URL
+func (s *Storage) getOutputPath(url string) string {
+	filename := s.hashString(url) + ".md"
+	domain := strings.Split(strings.TrimPrefix(url, "http://"), "//")[0]
+	domain = strings.Split(strings.TrimPrefix(domain, "https://"), "/")[0]
+	return filepath.Join(s.outputDir, domain, filename)
 }

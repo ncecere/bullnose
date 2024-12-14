@@ -32,7 +32,7 @@ WORKDIR /app
 USER bullnose
 
 # Copy binary from builder
-COPY --from=builder /app/build/bullnose /usr/local/bin/
+COPY --from=builder /app/bin/bullnose /usr/local/bin/
 
 # Create directory for output
 RUN mkdir -p /app/scraped-content
