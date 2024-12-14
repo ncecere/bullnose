@@ -15,19 +15,55 @@ A powerful web scraper that converts web pages to clean markdown format, with su
 - ⚙️ YAML configuration
 - 💻 Cross-platform support (Windows, macOS, Linux)
 
-## Quick Start
+## Installation
+
+### Linux
+
+```bash
+# Using curl
+curl -L https://github.com/ncecere/bullnose/releases/download/v1.0.0/bullnose-linux-amd64 -o bullnose
+chmod +x bullnose
+sudo mv bullnose /usr/local/bin/
+
+# Using wget
+wget https://github.com/ncecere/bullnose/releases/download/v1.0.0/bullnose-linux-amd64 -O bullnose
+chmod +x bullnose
+sudo mv bullnose /usr/local/bin/
+```
+
+### macOS
+
+```bash
+# Using curl
+curl -L https://github.com/ncecere/bullnose/releases/download/v1.0.0/bullnose-darwin-amd64 -o bullnose
+chmod +x bullnose
+sudo mv bullnose /usr/local/bin/
+
+# Using Homebrew
+brew tap ncecere/bullnose
+brew install bullnose
+```
+
+### Windows
+
+```powershell
+# Using PowerShell
+Invoke-WebRequest -Uri https://github.com/ncecere/bullnose/releases/download/v1.0.0/bullnose-windows-amd64.exe -OutFile bullnose.exe
+Move-Item bullnose.exe $env:USERPROFILE\AppData\Local\Microsoft\WindowsApps\
+
+# Using Scoop
+scoop bucket add ncecere https://github.com/ncecere/scoop-bucket
+scoop install bullnose
+```
 
 ### Using Go
 
 ```bash
-# Install
+# Install latest version
 go install github.com/ncecere/bullnose/cmd/bullnose@latest
 
-# Basic usage
-bullnose https://example.com
-
-# Use configuration file
-bullnose -c config.yaml
+# Install specific version
+go install github.com/ncecere/bullnose/cmd/bullnose@v1.0.0
 ```
 
 ### Using Docker
@@ -41,6 +77,16 @@ docker run --rm -v $(pwd)/output:/app/scraped-content ncecere/bullnose https://e
 
 # Using docker-compose
 docker-compose run bullnose https://example.com
+```
+
+## Quick Start
+
+```bash
+# Basic usage
+bullnose https://example.com
+
+# Use configuration file
+bullnose -c config.yaml
 ```
 
 ## Documentation
