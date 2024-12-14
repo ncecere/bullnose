@@ -39,11 +39,13 @@ func New(cfg *config.Config) (*Scraper, error) {
 
 	// Set parallel limit if enabled
 	if cfg.Parallel > 1 {
-		c.Limit(&colly.LimitRule{
+		if err := c.Limit(&colly.LimitRule{
 			DomainGlob:  "*",
 			Parallelism: cfg.Parallel,
 			RandomDelay: 1 * time.Second,
-		})
+		}); err != nil {
+			return nil, fmt.Errorf("error setting rate limit: %w", err)
+		}
 	}
 
 	// Configure domain restriction if enabled
@@ -157,7 +159,11 @@ func (s *Scraper) setupCallbacks() {
 			log.Printf("Found link: %s", link)
 		}
 		if !s.storage.IsVisited(e.Request.AbsoluteURL(link)) {
-			e.Request.Visit(link)
+			if err := e.Request.Visit(link); err != nil &&
+				err != colly.ErrAlreadyVisited &&
+				s.config.Debug {
+				log.Printf("Error visiting link %s: %v", link, err)
+			}
 		}
 	})
 
