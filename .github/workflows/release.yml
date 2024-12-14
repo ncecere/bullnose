@@ -10,8 +10,21 @@ permissions:
   packages: write
 
 jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+          cache: true
+      - name: Run tests
+        run: make test
+
   build:
     name: Build and Release
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,9 +34,6 @@ jobs:
         with:
           go-version: '1.21'
           cache: true
-
-      - name: Build and test
-        run: make all
 
       - name: Build all platforms
         run: make cross-build
@@ -45,7 +55,7 @@ jobs:
 
   docker:
     name: Build and Push Docker Image
-    needs: build
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

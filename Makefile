@@ -6,7 +6,7 @@ LDFLAGS=-ldflags "-X main.Version=${VERSION}"
 # Go related variables
 GOBASE=$(shell pwd)
 GOBIN=$(GOBASE)/bin
-GOFILES=$(wildcard *.go)
+GOSRC=$(GOBASE)/cmd/bullnose
 
 # OS/ARCH specific builds
 PLATFORMS=linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64
