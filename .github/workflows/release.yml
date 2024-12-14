@@ -36,12 +36,17 @@ jobs:
           cache: true
 
       - name: Build all platforms
-        run: make cross-build
+        run: |
+          mkdir -p bin
+          make cross-build
 
       - name: Generate checksums
         run: |
           cd bin
+          ls -la
           sha256sum * > ../sha256sums.txt
+          cd ..
+          cat sha256sums.txt
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
