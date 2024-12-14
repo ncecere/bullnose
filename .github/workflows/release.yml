@@ -38,14 +38,27 @@ jobs:
       - name: Build all platforms
         run: |
           mkdir -p bin
+          echo "Running cross-build..."
           make cross-build
+          echo "Cross-build complete. Listing bin directory:"
+          ls -la bin/
+          if [ -z "$(ls -A bin/)" ]; then
+            echo "Error: No files were created in bin directory"
+            exit 1
+          fi
 
       - name: Generate checksums
         run: |
           cd bin
+          echo "Generating checksums for files:"
           ls -la
-          sha256sum * > ../sha256sums.txt
+          sha256sum * > ../sha256sums.txt || {
+            echo "Error generating checksums. Contents of bin directory:"
+            ls -la
+            exit 1
+          }
           cd ..
+          echo "Generated checksums:"
           cat sha256sums.txt
 
       - name: Create Release
