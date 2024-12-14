@@ -2,7 +2,6 @@ package content
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"strings"
 
@@ -40,11 +39,7 @@ func (e *Extractor) ExtractTitle(domain string, selection *goquery.Selection, fa
 	// Try domain-specific pattern first
 	if patterns, ok := e.patterns[domain]; ok && patterns.TitlePattern != "" {
 		titleRegex := regexp.MustCompile(patterns.TitlePattern)
-		text, err := selection.Html()
-		if err != nil {
-			log.Printf("Error getting HTML for title extraction: %v", err)
-			return fallbackText
-		}
+		text, _ := selection.Html()
 		matches := titleRegex.FindStringSubmatch(text)
 		if len(matches) > 1 {
 			return matches[1]
@@ -68,11 +63,7 @@ func (e *Extractor) ExtractContent(domain string, selection *goquery.Selection) 
 
 	// Try domain-specific patterns first
 	if patterns, ok := e.patterns[domain]; ok && len(patterns.ContentPatterns) > 0 {
-		html, err := selection.Html()
-		if err != nil {
-			log.Printf("Error getting HTML for content extraction: %v", err)
-			return ""
-		}
+		html, _ := selection.Html()
 		for _, pattern := range patterns.ContentPatterns {
 			regex := regexp.MustCompile(pattern)
 			matches := regex.FindAllString(html, -1)
