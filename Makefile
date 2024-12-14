@@ -6,7 +6,7 @@ LDFLAGS=-ldflags "-X main.Version=${VERSION}"
 # Go related variables
 GOBASE=$(shell pwd)
 GOBIN=$(GOBASE)/bin
-GOSRC=$(GOBASE)/cmd/bullnose
+GOSRC=./cmd/bullnose
 
 # OS/ARCH specific builds
 PLATFORMS=linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64
@@ -20,7 +20,7 @@ all: clean build test ## Build and run tests
 
 build: ## Build the binary
 	@echo "Building ${BINARY_NAME}..."
-	@go build ${LDFLAGS} -o ${GOBIN}/${BINARY_NAME} ./cmd/bullnose
+	@go build ${LDFLAGS} -o ${GOBIN}/${BINARY_NAME} ${GOSRC}
 
 clean: ## Remove build artifacts
 	@echo "Cleaning..."
@@ -55,8 +55,8 @@ cross-build: ## Build for all platforms
 		GOOS=$${platform%/*} \
 		GOARCH=$${platform#*/} \
 		OUTPUT=${GOBIN}/${BINARY_NAME}-$${GOOS}-$${GOARCH} \
-		$(if $(findstring windows,$${GOOS}),OUTPUT=${GOBIN}/${BINARY_NAME}-$${GOOS}-$${GOARCH}.exe) \
-		go build ${LDFLAGS} -o $${OUTPUT} ./cmd/bullnose; \
+		$(if $(findstring windows,$${GOOS}),OUTPUT=${GOBIN}/${BINARY_NAME}-$${GOOS}-$${GOARCH}.exe,) \
+		go build ${LDFLAGS} -o "$${OUTPUT}" ${GOSRC}; \
 	done
 
 install: build ## Install binary to GOPATH/bin
