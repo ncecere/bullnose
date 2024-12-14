@@ -1,0 +1,204 @@
+# Full configuration example
+# This configuration demonstrates ALL available settings with detailed explanations
+
+#=============================================================================
+# COMPLETE CONFIGURATION REFERENCE
+# This file serves as both an example and a reference for all available options
+#=============================================================================
+
+#-----------------------------------------------------------------------------
+# REQUIRED SETTINGS
+#-----------------------------------------------------------------------------
+
+# [REQUIRED] URLs to scrape
+# You must provide at least one URL
+# Can be a single URL or multiple URLs
+urls:
+  - "https://example.com"
+  - "https://docs.example.com"
+  - "https://blog.example.com"
+
+#-----------------------------------------------------------------------------
+# Core Settings
+#-----------------------------------------------------------------------------
+
+# [OPTIONAL] Output directory for scraped content
+# - Relative paths are converted to absolute
+# - Directory will be created if it doesn't exist
+# Default: "./scraped-content"
+output: "./scraped-content"
+
+# [OPTIONAL] Maximum depth to follow links
+# - 1 = only scrape provided URLs
+# - 2 = also scrape pages linked from initial URLs
+# - 3+ = continue following links to specified depth
+# Range: 1 or greater
+# Default: 3
+depth: 5
+
+# [OPTIONAL] Number of parallel scraping actions
+# - Higher numbers increase speed but also server load
+# - Consider server limitations when setting this
+# Range: 1 or greater
+# Default: 8
+parallel: 16
+
+# [OPTIONAL] Domain restriction
+# - true = only follow links within the starting domain
+# - false = follow links to any domain
+# Example: When scraping example.com, links to external sites are:
+#   - followed if restrict-domain: false
+#   - ignored if restrict-domain: true
+# Default: true
+restrict-domain: true
+
+#-----------------------------------------------------------------------------
+# Time and Update Settings
+#-----------------------------------------------------------------------------
+
+# [OPTIONAL] Minimum time between rescraping
+# - Content newer than this duration is not rescraped
+# - Use this to avoid unnecessary server load
+# Format:
+#   Xm = X minutes (e.g., "30m")
+#   Xh = X hours (e.g., "24h")
+#   Xd = X days (e.g., "7d")
+# Default: "12h"
+rescrape-after: "48h"
+
+# [OPTIONAL] Force rescrape
+# - true = rescrape everything regardless of age
+# - false = respect rescrape-after duration
+# Useful for:
+# - Testing configuration
+# - Forcing content updates
+# - Initial content population
+# Default: false
+force: false
+
+#-----------------------------------------------------------------------------
+# Discovery Settings
+#-----------------------------------------------------------------------------
+
+# [OPTIONAL] Sitemap parsing
+# - true = automatically discover URLs from sitemap.xml
+# - Checks common locations:
+#   - /sitemap.xml
+#   - /sitemap_index.xml
+# Default: true
+parse-sitemaps: true
+
+#-----------------------------------------------------------------------------
+# URL Filtering
+#-----------------------------------------------------------------------------
+
+# [OPTIONAL] URL patterns to ignore
+# - Supports glob patterns (*, ?)
+# - Matches against full URL path
+# - Case-insensitive matching
+# Default: ["login", "admin", "logout", "/api/", "*.pdf", "private/*"]
+ignore:
+  # Authentication pages
+  - "login"
+  - "logout"
+  - "signin"
+  - "signup"
+  - "register"
+
+  # Admin sections
+  - "admin"
+  - "wp-admin"
+  - "dashboard"
+
+  # API endpoints
+  - "/api/*"
+  - "/graphql"
+  - "/rpc"
+
+  # File types
+  - "*.pdf"
+  - "*.zip"
+  - "*.tar.gz"
+
+  # Private sections
+  - "private/*"
+  - "account/*"
+  - "profile/*"
+
+#-----------------------------------------------------------------------------
+# Domain-specific Settings
+#-----------------------------------------------------------------------------
+
+# [OPTIONAL] Per-domain configuration
+# Configure specific behavior for different domains
+domain-config:
+  # Configuration for example.com
+  "example.com":
+    # Custom headers sent with each request
+    headers:
+      User-Agent: "Bullnose/1.0"
+      Accept-Language: "en-US"
+      Accept: "text/html,application/xhtml+xml"
+      Cache-Control: "no-cache"
+
+    # Cookies included with each request
+    cookies:
+      session: "demo-session"
+      preference: "light-theme"
+
+  # Configuration for docs.example.com
+  "docs.example.com":
+    headers:
+      User-Agent: "Bullnose/1.0"
+      Accept-Language: "en-US"
+
+#-----------------------------------------------------------------------------
+# Content Extraction Settings
+#-----------------------------------------------------------------------------
+
+# [OPTIONAL] Configure content extraction per domain
+# Define how content should be extracted from different sites
+content-patterns:
+  # Patterns for example.com
+  "example.com":
+    # Regular expression to extract title
+    # Captured group (in parentheses) becomes the title
+    title-pattern: "<h1[^>]*>(.*?)</h1>"
+
+    # Patterns to extract main content
+    # Each pattern is a regular expression
+    # Multiple patterns are tried in order
+    content-patterns:
+      - "<article[^>]*>(.*?)</article>"
+      - "<main[^>]*>(.*?)</main>"
+      - "<div class=\"content\"[^>]*>(.*?)</div>"
+
+    # Patterns to exclude from content
+    # Useful for removing navigation, ads, etc.
+    exclude-patterns:
+      - "<nav[^>]*>.*?</nav>"
+      - "<header[^>]*>.*?</header>"
+      - "<footer[^>]*>.*?</footer>"
+      - "<div class=\"ads\"[^>]*>.*?</div>"
+
+  # Patterns for docs.example.com
+  "docs.example.com":
+    title-pattern: "<title>(.*?)</title>"
+    content-patterns:
+      - "<div class=\"documentation\"[^>]*>(.*?)</div>"
+    exclude-patterns:
+      - "<div class=\"sidebar\"[^>]*>.*?</div>"
+
+#-----------------------------------------------------------------------------
+# Debug Settings
+#-----------------------------------------------------------------------------
+
+# [OPTIONAL] Debug mode
+# - true = output detailed logging
+# - Includes:
+#   - URLs being scraped
+#   - Parsing results
+#   - Error details
+#   - Performance information
+# Default: false
+debug: false

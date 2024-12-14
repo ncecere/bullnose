@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  bullnose:
+    image: ncecere/bullnose:latest
+    volumes:
+      - ./config:/app/config:ro        # Mount config directory
+      - ./scraped-content:/app/scraped-content  # Mount output directory
+    environment:
+      - CONFIG_FILE=/app/config/bullnose.yaml
+    # Command can be overridden via command line
+    # Example: docker-compose run bullnose https://example.com
+    command: --help
+
+    # Resource limits (optional, uncomment if needed)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 1G
+    #     reservations:
+    #       memory: 128M
+
+    # Healthcheck (optional, uncomment if implementing health endpoint)
+    # healthcheck:
+    #   test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+    #   interval: 30s
+    #   timeout: 10s
+    #   retries: 3
+    #   start_period: 5s

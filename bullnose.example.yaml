@@ -1,0 +1,50 @@
+# Output settings
+output: "./scraped-content"
+
+# Crawling behavior
+depth: 3                  # How deep to follow links
+parallel: 8              # Number of parallel scraping actions
+restrict-domain: true    # Only follow links within starting domain
+parse-sitemaps: true     # Parse sitemap.xml files for URLs
+
+# Time-based scraping
+rescrape-after: "12h"    # Only rescrape after this duration
+force: false             # Override time restrictions and force scrape
+
+# Debug settings
+debug: true             # Enable detailed logging
+
+# URLs to scrape
+urls:
+  - "https://example.com"
+
+# Domain-specific configurations
+domain-config:
+  "example.com":
+    headers:
+      User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+      Accept-Language: "en-US,en;q=0.9"
+    cookies:
+      session: "your-session-cookie"
+      preferences: "your-preferences-cookie"
+
+# Content extraction patterns
+content-patterns:
+  "example.com":
+    title-pattern: "<h1.*?>(.*?)</h1>"  # Regex to extract title
+    content-patterns:
+      - "<article.*?>(.*?)</article>"    # Main content pattern
+      - "<div class=\"content\".*?>(.*?)</div>"
+    exclude-patterns:
+      - "<div class=\"ads\".*?</div>"    # Remove ads
+      - "<nav.*?</nav>"                  # Remove navigation
+      - "<footer.*?</footer>"            # Remove footer
+
+# Ignore patterns (glob format)
+ignore:
+  - "login"
+  - "admin"
+  - "logout"
+  - "/api/"
+  - "*.pdf"
+  - "private/*"

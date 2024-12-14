@@ -1,0 +1,122 @@
+# Advanced configuration example
+# This configuration demonstrates more advanced features with explanations
+
+#-----------------------------------------------------------------------------
+# REQUIRED SETTINGS
+#-----------------------------------------------------------------------------
+
+# [REQUIRED] At least one URL to scrape
+urls:
+  - "https://example.com/blog"
+  - "https://example.com/docs"
+
+#-----------------------------------------------------------------------------
+# OPTIONAL SETTINGS (shown with default values)
+#-----------------------------------------------------------------------------
+
+# [OPTIONAL] Output directory for scraped content
+# Default: "./scraped-content"
+output: "./scraped-content"
+
+#-----------------------------------------------------------------------------
+# Crawling Settings
+#-----------------------------------------------------------------------------
+
+# [OPTIONAL] How deep to follow links from the starting URL
+# Range: 1 or greater
+# Default: 3
+depth: 3
+
+# [OPTIONAL] Number of parallel scraping actions
+# Higher numbers may improve speed but increase server load
+# Range: 1 or greater
+# Default: 8
+parallel: 4
+
+# [OPTIONAL] Only follow links within the starting domain
+# Set to false to allow following external links
+# Default: true
+restrict-domain: true
+
+# [OPTIONAL] Automatically discover URLs from sitemap.xml
+# Will check common sitemap locations (sitemap.xml, sitemap_index.xml)
+# Default: true
+parse-sitemaps: true
+
+#-----------------------------------------------------------------------------
+# Time-based Settings
+#-----------------------------------------------------------------------------
+
+# [OPTIONAL] Only rescrape content after this duration
+# Format: Xm (minutes), Xh (hours), Xd (days)
+# Example: "30m", "24h", "7d"
+# Default: "12h"
+rescrape-after: "24h"
+
+# [OPTIONAL] Force rescrape regardless of last scrape time
+# Useful for getting fresh content or testing
+# Default: false
+force: false
+
+#-----------------------------------------------------------------------------
+# Debug Settings
+#-----------------------------------------------------------------------------
+
+# [OPTIONAL] Enable detailed debug logging
+# Outputs additional information about the scraping process
+# Default: false
+debug: false
+
+#-----------------------------------------------------------------------------
+# URL Filtering
+#-----------------------------------------------------------------------------
+
+# [OPTIONAL] Patterns for URLs to ignore
+# Supports glob patterns (*, ?) and path matching
+# Default: ["login", "admin", "logout", "/api/", "*.pdf", "private/*"]
+ignore:
+  - "login"      # Skip login pages
+  - "admin"      # Skip admin sections
+  - "/api/"      # Skip API endpoints
+  - "*.pdf"      # Skip PDF files
+  - "private/*"  # Skip private sections
+
+#-----------------------------------------------------------------------------
+# Domain-specific Settings
+#-----------------------------------------------------------------------------
+
+# [OPTIONAL] Configure settings for specific domains
+# Useful for sites requiring special headers or cookies
+domain-config:
+  "example.com":
+    # Custom headers to send with requests
+    headers:
+      User-Agent: "Bullnose/1.0"
+      Accept-Language: "en-US"
+
+    # Cookies to include with requests
+    cookies:
+      session: "demo-session"
+
+#-----------------------------------------------------------------------------
+# Content Extraction Settings
+#-----------------------------------------------------------------------------
+
+# [OPTIONAL] Configure how content is extracted for specific domains
+content-patterns:
+  "example.com":
+    # Regular expression to extract title
+    # If not provided, uses standard HTML title or h1
+    title-pattern: "<h1.*?>(.*?)</h1>"
+
+    # Patterns to extract main content
+    # Each pattern is a regular expression
+    content-patterns:
+      - "<article.*?>(.*?)</article>"
+      - "<main.*?>(.*?)</main>"
+
+    # Patterns to exclude from content
+    # Useful for removing navigation, ads, etc.
+    exclude-patterns:
+      - "<nav.*?</nav>"
+      - "<footer.*?</footer>"

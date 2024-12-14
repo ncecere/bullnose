@@ -1,0 +1,26 @@
+# Simple configuration example
+# This file shows the minimal required settings to start scraping
+
+#-----------------------------------------------------------------------------
+# REQUIRED SETTINGS
+#-----------------------------------------------------------------------------
+
+# [REQUIRED] At least one URL to scrape
+urls:
+  - "https://example.com"
+
+#-----------------------------------------------------------------------------
+# OPTIONAL SETTINGS (shown with default values)
+#-----------------------------------------------------------------------------
+
+# [OPTIONAL] Output directory for scraped content
+# Default: "./scraped-content"
+output: "./scraped-content"
+
+# [OPTIONAL] How deep to follow links
+# Default: 3
+depth: 2
+
+# [OPTIONAL] Only follow links within starting domain
+# Default: true
+restrict-domain: true
