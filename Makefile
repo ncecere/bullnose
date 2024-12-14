@@ -54,9 +54,12 @@ cross-build: ## Build for all platforms
 	@for platform in ${PLATFORMS}; do \
 		GOOS=$${platform%/*} \
 		GOARCH=$${platform#*/} \
-		OUTPUT=${GOBIN}/${BINARY_NAME}-$${GOOS}-$${GOARCH} \
-		$(if $(findstring windows,$${GOOS}),OUTPUT=${GOBIN}/${BINARY_NAME}-$${GOOS}-$${GOARCH}.exe,) \
-		go build ${LDFLAGS} -o "$${OUTPUT}" ${GOSRC}; \
+		OUTPUT="${GOBIN}/${BINARY_NAME}-$${GOOS}-$${GOARCH}" ; \
+		if [ "$${GOOS}" = "windows" ]; then \
+			OUTPUT="$${OUTPUT}.exe" ; \
+		fi ; \
+		echo "Building $${OUTPUT}" ; \
+		GOOS=$${GOOS} GOARCH=$${GOARCH} go build ${LDFLAGS} -o "$${OUTPUT}" ${GOSRC} || exit 1; \
 	done
 
 install: build ## Install binary to GOPATH/bin
