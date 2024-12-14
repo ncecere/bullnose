@@ -10,103 +10,34 @@ permissions:
   packages: write
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
-        with:
-          go-version: '1.21'
-          cache: true
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
-        with:
-          version: latest
-          args: --timeout=5m
-          only-new-issues: false
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
-        with:
-          go-version: '1.21'
-          cache: true
-      - name: Run tests
-        run: go test -v ./...
-
   build:
     name: Build and Release
-    needs: [lint, test]
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - os: linux
-            arch: amd64
-          - os: linux
-            arch: arm64
-          - os: darwin
-            arch: amd64
-          - os: darwin
-            arch: arm64
-          - os: windows
-            arch: amd64
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v4
-        with:
-          go-version: '1.21'
-          cache: true
-
-      - name: Build binary
-        env:
-          GOOS: ${{ matrix.os }}
-          GOARCH: ${{ matrix.arch }}
-        run: |
-          OUTPUT="bullnose-${{ matrix.os }}-${{ matrix.arch }}"
-          if [ "${{ matrix.os }}" = "windows" ]; then
-            OUTPUT="${OUTPUT}.exe"
-          fi
-          go build -v -o "dist/${OUTPUT}" ./cmd/bullnose
-
-      - name: Upload binary
-        uses: actions/upload-artifact@v3
-        with:
-          name: bullnose-${{ matrix.os }}-${{ matrix.arch }}
-          path: dist/bullnose-${{ matrix.os }}-${{ matrix.arch }}*
-
-  release:
-    name: Create Release
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Download all artifacts
-        uses: actions/download-artifact@v3
+      - uses: actions/setup-go@v4
         with:
-          path: dist
+          go-version: '1.21'
+          cache: true
+
+      - name: Build and test
+        run: make all
+
+      - name: Build all platforms
+        run: make cross-build
 
       - name: Generate checksums
         run: |
-          cd dist
-          for dir in */; do
-            cd "$dir"
-            sha256sum * > ../../sha256sums.txt
-            cd ..
-          done
+          cd bin
+          sha256sum * > ../sha256sums.txt
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            dist/**/*
+            bin/*
             sha256sums.txt
           draft: false
           prerelease: false
@@ -114,7 +45,7 @@ jobs:
 
   docker:
     name: Build and Push Docker Image
-    needs: [lint, test]
+    needs: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
